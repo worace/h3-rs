@@ -2,12 +2,15 @@ extern crate geo_types;
 
 use geo_types::Coordinate;
 
-// geoToH3(coord, res) -> h3 id
-// geoToFace(coord) -> face (numeric id)
-// geoToFaceIJK(coord, res) -> faceIJK coord
-// geoToHex2d(coord, res) -> (face, vec2D)
-// geoToVec3d(coord) -> 3dCoord
-// hex2dToCoordIJK(vec2D, )
+mod constants;
+
+// [ ] geoToH3(coord, res) -> h3 id
+// [ ] geoToFace(coord) -> face (numeric id)
+// [ ] geoToFaceIJK(coord, res) -> faceIJK coord
+// [ ] geoToHex2d(coord, res) -> (face, vec2D)
+// [x] geoToVec3d(coord) -> 3dCoord
+// [ ] hex2dToCoordIJK(vec2D, )
+// [ ] pointSquareDist(vec3d, vec3d)
 // Most coord ops in radians
 
 // FaceIJK:
@@ -36,7 +39,7 @@ impl GeoCoord {
 
 
 #[derive(Debug, PartialEq, PartialOrd)]
-struct Vec3d {
+pub struct Vec3d {
     x: f64,
     y: f64,
     z: f64
@@ -48,8 +51,26 @@ impl Vec3d {
     }
 }
 
-fn geo_to_face() -> u8 {
-    0
+fn square(n: f64) -> f64 {
+    n.powi(2)
+}
+
+fn square_distance_3d(a: &Vec3d, b: &Vec3d) -> f64 {
+    square(a.x - b.x) + square(a.y - b.y) + square(a.z - b.z)
+}
+
+fn geo_to_face(geo: GeoCoord) -> usize {
+    let v3d = geo_to_coord_3d(geo);
+    let mut face = 0;
+    let mut min_dist = square_distance_3d(&v3d, &constants::FACE_CENTERS[0]);
+    for i in (1..constants::NUM_ICOSA_FACES) {
+        let dist = square_distance_3d(&v3d, &constants::FACE_CENTERS[i]);
+        if (dist < min_dist) {
+            face = i;
+            min_dist = dist;
+        }
+    }
+    face
 }
 
 fn geo_to_coord_3d(geo: GeoCoord) -> Vec3d {
@@ -105,5 +126,31 @@ mod tests {
         for (coord, v3d) in pairs {
             assert_eq_v3d(v3d, geo_to_coord_3d(coord));
         }
+    }
+
+    #[test]
+    fn test_geo_to_face() {
+    }
+
+    #[test]
+    fn test_point_square_distance() {
+    // TEST(_pointSquareDist) {
+    //     Vec3d v1 = {0, 0, 0};
+    //     Vec3d v2 = {1, 0, 0};
+    //     Vec3d v3 = {0, 1, 1};
+    //     Vec3d v4 = {1, 1, 1};
+    //     Vec3d v5 = {1, 1, 2};
+
+    //     t_assert(fabs(_pointSquareDist(&v1, &v1)) < DBL_EPSILON,
+    //              "distance to self is 0");
+    //     t_assert(fabs(_pointSquareDist(&v1, &v2) - 1) < DBL_EPSILON,
+    //              "distance to <1,0,0> is 1");
+    //     t_assert(fabs(_pointSquareDist(&v1, &v3) - 2) < DBL_EPSILON,
+    //              "distance to <0,1,1> is 2");
+    //     t_assert(fabs(_pointSquareDist(&v1, &v4) - 3) < DBL_EPSILON,
+    //              "distance to <1,1,1> is 3");
+    //     t_assert(fabs(_pointSquareDist(&v1, &v5) - 6) < DBL_EPSILON,
+    //              "distance to <1,1,2> is 6");
+    // }
     }
 }
