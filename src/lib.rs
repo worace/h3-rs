@@ -45,6 +45,28 @@ impl GeoCoord {
     }
 }
 
+#[derive(Debug, PartialEq, PartialOrd)]
+pub struct Vec2d {
+    x: f64,
+    y: f64
+}
+
+impl Vec2d {
+    fn zero() -> Vec2d { Vec2d{x: 0.0, y: 0.0} }
+}
+
+#[derive(Debug, PartialEq, PartialOrd)]
+struct FaceCoord2d {
+    face: usize,
+    coords: Vec2d
+}
+
+impl fmt::Display for FaceCoord2d {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "FaceCoord2d(face: {}, coords: ({}, {}))",
+               self.face, self.coords.x, self.coords.y)
+    }
+}
 
 #[derive(Debug, PartialEq, PartialOrd)]
 pub struct Vec3d {
@@ -67,7 +89,7 @@ fn square_distance_3d(a: &Vec3d, b: &Vec3d) -> f64 {
     square(a.x - b.x) + square(a.y - b.y) + square(a.z - b.z)
 }
 
-fn geo_to_face(geo: &GeoCoord) -> usize {
+fn nearest_face_to_geo(geo: &GeoCoord) -> (usize, f64) {
     let v3d = geo_to_coord_3d(geo);
     let mut face = 0;
     let mut min_dist = square_distance_3d(&v3d, &constants::FACE_CENTERS[0]);
@@ -78,7 +100,7 @@ fn geo_to_face(geo: &GeoCoord) -> usize {
             min_dist = dist;
         }
     }
-    face
+    (face, min_dist)
 }
 
 fn geo_to_coord_3d(geo: &GeoCoord) -> Vec3d {
@@ -91,10 +113,23 @@ fn geo_to_coord_3d(geo: &GeoCoord) -> Vec3d {
     )
 }
 
+fn geo_to_face_2d(geo: &GeoCoord) -> FaceCoord2d {
+    let (face, dist) = nearest_face_to_geo(geo);
+
+    let r = (1.0 - dist / 2.0).acos();
+    if r < constants::FACE_DISTANCE_EPSILON {
+        FaceCoord2d{face: face, coords: Vec2d::zero()}
+    } else {
+        FaceCoord2d{face: face, coords: Vec2d::zero()}
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use *;
     use geo_to_coord_3d;
-    use geo_to_face;
+    use geo_to_face_2d;
+    use nearest_face_to_geo;
     use square_distance_3d;
     use Vec3d;
     use GeoCoord;
@@ -128,14 +163,21 @@ mod tests {
         }
     }
 
-    fn geo_to_face_test_cases() -> Vec<(GeoCoord, usize)> {
-        let mut f = File::open("./tests/resources/geo_coord_face_test_cases.tsv").expect("file not found");
+    fn test_tsv(name: &str) -> Vec<Vec<String>> {
+        let mut f = File::open(format!("./tests/resources/{}", name)).expect("file not found");
         let mut contents = String::new();
         f.read_to_string(&mut contents).expect("Failed to read test file");
+
         let lines = contents.split("\n");
-        let tsv = lines.filter(|l| !l.is_empty()).map(|l| l.split("\t"));
-        tsv.map(|split_cols| {
-            let cols: Vec<&str> = split_cols.collect();
+
+        let tsv = lines
+            .filter(|l| !l.is_empty())
+            .map(|l| l.split("\t").map(|s| s.to_owned()).collect());
+        tsv.collect()
+    }
+
+    fn geo_to_face_test_cases() -> Vec<(GeoCoord, usize)> {
+        test_tsv("geo_coord_face_test_cases.tsv").iter().map(|cols| {
             let lat_rads: f64 = cols[0].parse().unwrap();
             let lon_rads: f64 = cols[1].parse().unwrap();
             let face: usize = cols[2].parse().unwrap();
@@ -147,13 +189,32 @@ mod tests {
     fn test_geo_to_face() {
         for pair in geo_to_face_test_cases() {
             assert_eq!(
-                geo_to_face(&pair.0),
+                nearest_face_to_geo(&pair.0).0,
                 pair.1,
                 "Expected GeoCoord {} to be nearest face {}",
                 pair.0,
                 pair.1
             );
         }
+    }
+
+    #[test]
+    fn test_face_2d_coords_for_face_centers() {
+        test_tsv("face_2d_zero_coord_examples.tsv").iter().for_each(|cols| {
+            let lat_rads: f64 = cols[0].parse().unwrap();
+            let lon_rads: f64 = cols[1].parse().unwrap();
+            let face: usize = cols[2].parse().unwrap();
+            let geo = GeoCoord::new(lat_rads, lon_rads);
+
+            let exp_face_coord = FaceCoord2d{face: face, coords: Vec2d::zero()};
+            assert_eq!(
+                geo_to_face_2d(&geo),
+                exp_face_coord,
+                "Expected Geo Coord {} to map to FaceCoord2d {}",
+                geo,
+                exp_face_coord
+            )
+        });
     }
 
     #[test]
