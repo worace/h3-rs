@@ -1,6 +1,7 @@
+#![allow(dead_code)]
 extern crate geo_types;
 
-use geo_types::Coordinate;
+// use geo_types::Coordinate;
 
 mod constants;
 
@@ -63,9 +64,9 @@ fn geo_to_face(geo: GeoCoord) -> usize {
     let v3d = geo_to_coord_3d(geo);
     let mut face = 0;
     let mut min_dist = square_distance_3d(&v3d, &constants::FACE_CENTERS[0]);
-    for i in (1..constants::NUM_ICOSA_FACES) {
+    for i in 1..constants::NUM_ICOSA_FACES {
         let dist = square_distance_3d(&v3d, &constants::FACE_CENTERS[i]);
-        if (dist < min_dist) {
+        if dist < min_dist {
             face = i;
             min_dist = dist;
         }
@@ -96,8 +97,8 @@ fn geo_to_coord_3d(geo: GeoCoord) -> Vec3d {
 
 #[cfg(test)]
 mod tests {
-    use geo_types::Coordinate;
     use geo_to_coord_3d;
+    use square_distance_3d;
     use Vec3d;
     use GeoCoord;
 
@@ -133,24 +134,17 @@ mod tests {
     }
 
     #[test]
-    fn test_point_square_distance() {
-    // TEST(_pointSquareDist) {
-    //     Vec3d v1 = {0, 0, 0};
-    //     Vec3d v2 = {1, 0, 0};
-    //     Vec3d v3 = {0, 1, 1};
-    //     Vec3d v4 = {1, 1, 1};
-    //     Vec3d v5 = {1, 1, 2};
+    fn test_square_distance_3d() {
+        let v1 = Vec3d::new(0.0, 0.0, 0.0);
+        let v2 = Vec3d::new(1.0, 0.0, 0.0);
+        let v3 = Vec3d::new(0.0, 1.0, 1.0);
+        let v4 = Vec3d::new(1.0, 1.0, 1.0);
+        let v5 = Vec3d::new(1.0, 1.0, 2.0);
 
-    //     t_assert(fabs(_pointSquareDist(&v1, &v1)) < DBL_EPSILON,
-    //              "distance to self is 0");
-    //     t_assert(fabs(_pointSquareDist(&v1, &v2) - 1) < DBL_EPSILON,
-    //              "distance to <1,0,0> is 1");
-    //     t_assert(fabs(_pointSquareDist(&v1, &v3) - 2) < DBL_EPSILON,
-    //              "distance to <0,1,1> is 2");
-    //     t_assert(fabs(_pointSquareDist(&v1, &v4) - 3) < DBL_EPSILON,
-    //              "distance to <1,1,1> is 3");
-    //     t_assert(fabs(_pointSquareDist(&v1, &v5) - 6) < DBL_EPSILON,
-    //              "distance to <1,1,2> is 6");
-    // }
+        assert_eq_floats(square_distance_3d(&v1, &v1), 0.0);
+        assert_eq_floats(square_distance_3d(&v1, &v2), 1.0);
+        assert_eq_floats(square_distance_3d(&v1, &v3), 2.0);
+        assert_eq_floats(square_distance_3d(&v1, &v4), 3.0);
+        assert_eq_floats(square_distance_3d(&v1, &v5), 6.0);
     }
 }
