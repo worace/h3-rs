@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 extern crate geo_types;
 use std::fmt;
+use std::f64::consts::PI;
 
 // use geo_types::Coordinate;
 
+const TWO_PI: f64 = PI * 2.0;
 mod constants;
 
 // [ ] geoToH3(coord, res) -> h3 id
@@ -130,6 +132,22 @@ fn geo_azimuth_radians(a: &GeoCoord, b: &GeoCoord) -> f64 {
     let x = (a.lat.cos() * b.lat.sin()) -
         (a.lat.sin() * b.lat.cos() * (b.lon - a.lon).cos());
     y.atan2(x)
+}
+
+/**
+ * Normalizes radians to a value between 0.0 and two PI.
+ *
+ * @param rads The input radians value.
+ * @return The normalized radians value.
+ */
+fn positive_angle_radians(angle: f64) -> f64 {
+    if angle < 0.0 {
+        angle + TWO_PI
+    } else if angle > TWO_PI {
+        angle - TWO_PI
+    } else {
+        angle
+    }
 }
 
 #[cfg(test)]
@@ -267,6 +285,36 @@ mod tests {
 
         for (a, b, azimuth) in cases {
             assert_eq_floats(azimuth, geo_azimuth_radians(&a, &b));
+        }
+    }
+
+    #[test]
+    fn test_positive_angle_rads() {
+        let cases = vec![
+            (-1.387236, 4.895949),
+            (-0.895065, 5.388120),
+            (-0.642279, 5.640906),
+            (-1.278988, 5.004198),
+            (-1.142544, 5.140641),
+            (-2.778123, 3.505063),
+            (-0.648280, 5.634906),
+            (-2.500741, 3.782444),
+            (9.004937, 2.7217516),
+            (-1.314182, 4.969003),
+            (-1.097476, 5.185710),
+            (-2.181562, 4.101623),
+            (7.209724, 0.9265386),
+            (-2.567716, 3.715469),
+            (-0.522846, 5.760339),
+            (-0.748559, 5.534626),
+            (-0.231651, 6.051535),
+            (-2.598210, 3.684975),
+            (-0.999930, 5.283255),
+            (-1.474177, 4.809009)
+        ];
+
+        for (a,b) in cases {
+            assert_eq_floats(b, positive_angle_radians(a));
         }
     }
 }
