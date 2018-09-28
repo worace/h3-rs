@@ -55,6 +55,7 @@ pub struct Vec2d {
 
 impl Vec2d {
     fn zero() -> Vec2d { Vec2d{x: 0.0, y: 0.0} }
+    fn new(x: f64, y: f64) -> Vec2d { Vec2d{x: x, y: y} }
 }
 
 #[derive(Debug, PartialEq, PartialOrd)]
@@ -115,18 +116,6 @@ fn geo_to_coord_3d(geo: &GeoCoord) -> Vec3d {
     )
 }
 
-fn geo_to_hex_2d(geo: &GeoCoord) -> FaceCoord2d {
-    let (face, dist) = nearest_face_to_geo(geo);
-
-    let r = (1.0 - dist / 2.0).acos();
-    if r < constants::FACE_DISTANCE_EPSILON {
-        return FaceCoord2d{face: face, coords: Vec2d::zero()};
-    }
-
-    let face_center_geo = &constants::FACE_CENTER_GEO_COORDS[face];
-    FaceCoord2d{face: face, coords: Vec2d::zero()}
-}
-
 fn geo_azimuth_radians(a: &GeoCoord, b: &GeoCoord) -> f64 {
     let y = b.lat.cos() * (b.lon - a.lon).sin();
     let x = (a.lat.cos() * b.lat.sin()) -
@@ -157,6 +146,48 @@ fn face_theta(geo: &GeoCoord, face: usize) -> f64 {
     positive_angle_radians(face_axis_i_azimuth - point_face_azimuth)
 }
 
+/**
+ * Returns whether or not a resolution is a Class III grid. Note that odd
+ * resolutions are Class III and even resolutions are Class II.
+ * @param res The H3 resolution.
+ * @return 1 if the resolution is a Class III grid, and 0 if the resolution is
+ *         a Class II grid.
+ */
+fn is_class_iii_resolution(res: usize) -> bool {
+    res % 2 == 1
+}
+
+fn is_class_ii_resolution(res: usize) -> bool {
+    res % 2 == 0
+}
+
+fn geo_to_hex_2d(geo: &GeoCoord, res: usize) -> FaceCoord2d {
+    let (face, dist) = nearest_face_to_geo(geo);
+
+    let r = (1.0 - dist / 2.0).acos();
+    if r < constants::FACE_DISTANCE_EPSILON {
+        return FaceCoord2d{face: face, coords: Vec2d::zero()};
+    }
+
+    let face_angle = if is_class_iii_resolution(res) {
+        positive_angle_radians(
+            face_theta(geo, face) - constants::AP7_ROT_RADS
+        )
+    } else {
+        face_theta(geo, face)
+    };
+
+
+    let mut gnomonic_r = r.tan() / constants::RES0_U_GNOMONIC;
+    for _ in 0..res {
+        gnomonic_r *= constants::SQRT7;
+    }
+
+    let coords = Vec2d{x: gnomonic_r * face_angle.cos(),
+                       y: gnomonic_r * face_angle.sin()};
+    FaceCoord2d{face: face, coords: coords}
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -169,8 +200,11 @@ mod tests {
     use std::fs::File;
     use std::io::prelude::*;
 
+    const DEFAULT_FLOAT_EPSILON: f64 = 0.0001;
     fn assert_eq_floats(a: f64, b: f64) -> () {
-        let epsilon = 0.0001;
+        assert_eq_floats_with_eps(a, b, DEFAULT_FLOAT_EPSILON);
+    }
+    fn assert_eq_floats_with_eps(a: f64, b: f64, epsilon: f64) -> () {
         assert!((a - b).abs() < epsilon,
                 format!("Expected {} vs {} within {}", a, b, epsilon));
     }
@@ -241,7 +275,7 @@ mod tests {
 
             let exp_face_coord = FaceCoord2d{face: face, coords: Vec2d::zero()};
             assert_eq!(
-                geo_to_hex_2d(&geo),
+                geo_to_hex_2d(&geo, 0),
                 exp_face_coord,
                 "Expected Geo Coord {} to map to FaceCoord2d {}",
                 geo,
@@ -363,6 +397,47 @@ mod tests {
         for (geo, face, exp_theta) in cases {
             let theta = face_theta(&geo, face);
             assert_eq_floats(theta, exp_theta);
+        }
+    }
+
+    #[test]
+    fn test_checking_resolution_class() {
+        assert!(is_class_iii_resolution(1));
+        assert!(is_class_iii_resolution(5));
+        assert!(!is_class_iii_resolution(2));
+        assert!(!is_class_iii_resolution(4));
+        assert!(is_class_ii_resolution(0));
+        assert!(is_class_ii_resolution(2));
+        assert!(!is_class_ii_resolution(7));
+        assert!(!is_class_ii_resolution(9));
+    }
+
+    fn assert_eq_face_coords(a: FaceCoord2d, b: FaceCoord2d) -> () {
+        assert_eq!(a.face, b.face, "Expected face {} to match {}", a.face, b.face);
+        assert_eq_floats_with_eps(a.coords.x, b.coords.x, 0.00001);
+        assert_eq_floats_with_eps(a.coords.y, b.coords.y, 0.00001);
+    }
+
+    #[test]
+    fn test_geo_to_hex2d_results() {
+        for cols in test_tsv("hex_2d_non_zero_cases.tsv") {
+            let lat_rads: f64 = cols[0].parse().unwrap();
+            let lon_rads: f64 = cols[1].parse().unwrap();
+            let res: usize = cols[2].parse().unwrap();
+            let face: usize = cols[3].parse().unwrap();
+            let x: f64 = cols[4].parse().unwrap();
+            let y: f64 = cols[5].parse().unwrap();
+
+            let geo = GeoCoord::new(lat_rads, lon_rads);
+
+            assert_eq_face_coords(
+                geo_to_hex_2d(&geo, res),
+                FaceCoord2d{
+                    face: face,
+                    coords: Vec2d::new(x, y)
+                }
+            );
+
         }
     }
 }
