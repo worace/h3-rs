@@ -150,6 +150,13 @@ fn positive_angle_radians(angle: f64) -> f64 {
     }
 }
 
+fn face_theta(geo: &GeoCoord, face: usize) -> f64 {
+    let face_axis_i_azimuth = constants::CLASS_II_FACE_IJK_AXES[face][0];
+    let face_center = &constants::FACE_CENTER_GEO_COORDS[face];
+    let point_face_azimuth = positive_angle_radians(geo_azimuth_radians(face_center, geo));
+    positive_angle_radians(face_axis_i_azimuth - point_face_azimuth)
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -315,6 +322,47 @@ mod tests {
 
         for (a,b) in cases {
             assert_eq_floats(b, positive_angle_radians(a));
+        }
+    }
+
+    #[test]
+    fn test_face_theta() {
+        let cases = vec![
+            (GeoCoord::new(1.258573, 2.039761), 1, 1.138107),
+            (GeoCoord::new(-0.677089, -0.758010), 13, 2.053503),
+            (GeoCoord::new(-0.938231, 3.000496), 15, 0.047635),
+            (GeoCoord::new(1.157020, -2.137218), 2, 1.726973),
+            (GeoCoord::new(0.375171, -1.478357), 7, 1.907947),
+            (GeoCoord::new(0.666978, 2.478336), 6, 4.255309),
+            (GeoCoord::new(0.499680, -0.299140), 3, 4.522263),
+            (GeoCoord::new(0.770502, -1.553657), 2, 3.419251),
+            (GeoCoord::new(0.038155, 1.586939), 5, 5.235988),
+            (GeoCoord::new(-0.439301, 0.681398), 9, 0.505100),
+            (GeoCoord::new(1.009809, 0.577651), 0, 0.191516),
+            (GeoCoord::new(0.713048, -0.280992), 3, 5.892041),
+            (GeoCoord::new(-0.609226, -0.388859), 13, 1.806873),
+            (GeoCoord::new(-0.677665, 2.392681), 15, 4.682011),
+            (GeoCoord::new(-0.108839, 2.286307), 10, 2.213284),
+            (GeoCoord::new(0.204382, -0.712922), 8, 3.422628),
+            (GeoCoord::new(-0.629125, 0.181376), 13, 4.687292),
+            (GeoCoord::new(0.340684, -2.290744), 11, 5.217366),
+            (GeoCoord::new(1.304647, -2.851584), 1, 4.610854),
+            (GeoCoord::new(-0.161922, -2.342135), 11, 3.932146),
+            (GeoCoord::new(-0.747909, 3.133747), 15, 0.603066),
+            (GeoCoord::new(-0.463428, -1.088851), 12, 4.423758),
+            (GeoCoord::new(-0.486034, 2.020983), 15, 4.271083),
+            (GeoCoord::new(0.034264, -2.482857), 11, 3.946226),
+            (GeoCoord::new(1.251998, 5.660560), 2, 0.114276),
+            (GeoCoord::new(-0.807800, -2.094861), 17, 5.478552),
+            (GeoCoord::new(0.218812, 4.900052), 12, 0.246037),
+            (GeoCoord::new(-0.668244, 2.984760), 15, 0.774780),
+            (GeoCoord::new(0.722083, -0.884139), 3, 1.529580),
+            (GeoCoord::new(-0.830868, 1.500760), 19, 3.141593)
+        ];
+
+        for (geo, face, exp_theta) in cases {
+            let theta = face_theta(&geo, face);
+            assert_eq_floats(theta, exp_theta);
         }
     }
 }
