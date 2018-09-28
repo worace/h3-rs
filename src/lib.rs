@@ -28,7 +28,7 @@ mod constants;
 // } CoordIJK;
 
 #[derive(Debug)]
-struct GeoCoord {
+pub struct GeoCoord {
     lat: f64,
     lon: f64
 }
@@ -113,22 +113,30 @@ fn geo_to_coord_3d(geo: &GeoCoord) -> Vec3d {
     )
 }
 
-fn geo_to_face_2d(geo: &GeoCoord) -> FaceCoord2d {
+fn geo_to_hex_2d(geo: &GeoCoord) -> FaceCoord2d {
     let (face, dist) = nearest_face_to_geo(geo);
 
     let r = (1.0 - dist / 2.0).acos();
     if r < constants::FACE_DISTANCE_EPSILON {
-        FaceCoord2d{face: face, coords: Vec2d::zero()}
-    } else {
-        FaceCoord2d{face: face, coords: Vec2d::zero()}
+        return FaceCoord2d{face: face, coords: Vec2d::zero()};
     }
+
+    let face_center_geo = &constants::FACE_CENTER_GEO_COORDS[face];
+    FaceCoord2d{face: face, coords: Vec2d::zero()}
+}
+
+fn geo_azimuth_radians(a: &GeoCoord, b: &GeoCoord) -> f64 {
+    let y = b.lat.cos() * (b.lon - a.lon).sin();
+    let x = (a.lat.cos() * b.lat.sin()) -
+        (a.lat.sin() * b.lat.cos() * (b.lon - a.lon).cos());
+    y.atan2(x)
 }
 
 #[cfg(test)]
 mod tests {
     use *;
     use geo_to_coord_3d;
-    use geo_to_face_2d;
+    use geo_to_hex_2d;
     use nearest_face_to_geo;
     use square_distance_3d;
     use Vec3d;
@@ -137,7 +145,7 @@ mod tests {
     use std::io::prelude::*;
 
     fn assert_eq_floats(a: f64, b: f64) -> () {
-        let epsilon = 0.000001;
+        let epsilon = 0.0001;
         assert!((a - b).abs() < epsilon,
                 format!("Expected {} vs {} within {}", a, b, epsilon));
     }
@@ -208,7 +216,7 @@ mod tests {
 
             let exp_face_coord = FaceCoord2d{face: face, coords: Vec2d::zero()};
             assert_eq!(
-                geo_to_face_2d(&geo),
+                geo_to_hex_2d(&geo),
                 exp_face_coord,
                 "Expected Geo Coord {} to map to FaceCoord2d {}",
                 geo,
@@ -230,5 +238,35 @@ mod tests {
         assert_eq_floats(square_distance_3d(&v1, &v3), 2.0);
         assert_eq_floats(square_distance_3d(&v1, &v4), 3.0);
         assert_eq_floats(square_distance_3d(&v1, &v5), 6.0);
+    }
+
+    #[test]
+    fn test_geo_azimuth_radians() {
+        let cases = vec![
+            (GeoCoord::new(1.054751, -1.347517) , GeoCoord::new(0.757873, -1.700381) , -2.361377),
+            (GeoCoord::new(-0.491715, -2.739604), GeoCoord::new(-0.679978, -2.580232), 2.569891),
+            (GeoCoord::new(-0.491715, -2.739604), GeoCoord::new(-0.211030, -2.975053), -0.712065),
+            (GeoCoord::new(0.605929, 2.953923)  , GeoCoord::new(0.919620, 2.719804)  , -0.416341),
+            (GeoCoord::new(0.079066, 2.408163)  , GeoCoord::new(0.101005, 2.400045)  , -0.352712),
+            (GeoCoord::new(-0.605929, -0.187669), GeoCoord::new(-0.189070, -0.236293), -0.117554),
+            (GeoCoord::new(-0.172745, -1.463446), GeoCoord::new(-0.091844, -1.669910), -1.209337),
+            (GeoCoord::new(-0.172745, -1.463446), GeoCoord::new(-0.039764, -1.769705), -1.178624),
+            (GeoCoord::new(-0.803583, -1.893195), GeoCoord::new(-0.567315, -1.768839), 0.427850),
+            (GeoCoord::new(-1.307748, -0.604648), GeoCoord::new(-1.186825, -0.604890), -0.000753),
+            (GeoCoord::new(-0.600192, 2.690989) , GeoCoord::new(-0.704096, 2.934774) , 2.135086),
+            (GeoCoord::new(1.307748, 2.536945)  , GeoCoord::new(1.119119, -2.838903) , 1.645120),
+            (GeoCoord::new(0.803583, 1.248397)  , GeoCoord::new(0.921756, 0.832705)  , -1.005149),
+            (GeoCoord::new(-1.307748, -0.604648), GeoCoord::new(-1.011638, 0.063376) , 1.065688),
+            (GeoCoord::new(-0.491715, -2.739604), GeoCoord::new(-0.344152, -2.672664), 0.407104),
+            (GeoCoord::new(-1.054751, 1.794075) , GeoCoord::new(-1.223819, 2.037650) , 2.707681),
+            (GeoCoord::new(0.427371, -1.888876) , GeoCoord::new(0.606291, -1.851838) , 0.169130),
+            (GeoCoord::new(1.054751, -1.347517) , GeoCoord::new(0.757870, -1.700376) , -2.361388),
+            (GeoCoord::new(0.427371, -1.888876) , GeoCoord::new(0.019223, -1.958678) , -2.967246),
+            (GeoCoord::new(-1.054751, 1.794075) , GeoCoord::new(-1.158853, 1.237223) , -2.207662)
+        ];
+
+        for (a, b, azimuth) in cases {
+            assert_eq_floats(azimuth, geo_azimuth_radians(&a, &b));
+        }
     }
 }
