@@ -9,12 +9,12 @@ const TWO_PI: f64 = PI * 2.0;
 mod constants;
 
 // [ ] geoToH3(coord, res) -> h3 id
-// [ ] geoToFace(coord) -> face (numeric id)
+// [X] geoToFace(coord) -> face (numeric id)
 // [ ] geoToFaceIJK(coord, res) -> faceIJK coord
-// [ ] geoToHex2d(coord, res) -> (face, vec2D)
+// [X] geoToHex2d(coord, res) -> (face, vec2D)
 // [x] geoToVec3d(coord) -> 3dCoord
 // [ ] hex2dToCoordIJK(vec2D, )
-// [ ] pointSquareDist(vec3d, vec3d)
+// [X] pointSquareDist(vec3d, vec3d)
 // Most coord ops in radians
 
 // FaceIJK:
