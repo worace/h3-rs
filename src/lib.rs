@@ -2,6 +2,7 @@
 extern crate geo_types;
 use std::fmt;
 use std::f64::consts::PI;
+use std::cmp::min;
 
 // use geo_types::Coordinate;
 
@@ -285,6 +286,35 @@ fn unnormalized_coord_ijk(h2d: &Vec2d) -> CoordIJK {
     coord
 }
 
+fn normalize_ijk_coord(raw: CoordIJK) -> CoordIJK {
+    let mut norm = CoordIJK{i: raw.i, j: raw.j, k: raw.k};
+    if norm.i < 0 {
+        norm.j -= norm.i;
+        norm.k -= norm.i;
+        norm.i = 0
+    }
+
+    if norm.j < 0 {
+        norm.i -= norm.j;
+        norm.k -= norm.j;
+        norm.j = 0;
+    }
+
+    if norm.k < 0 {
+        norm.i -= norm.k;
+        norm.j -= norm.k;
+        norm.k = 0;
+    }
+
+    let min = min(norm.i, min(norm.j, norm.k));
+    if min > 0 {
+        norm.i -= min;
+        norm.j -= min;
+        norm.k -= min;
+    }
+    norm
+}
+
 fn hex_2d_to_coord_ijk(h2d: &Vec2d) -> CoordIJK {
     unnormalized_coord_ijk(h2d)
 }
@@ -556,6 +586,23 @@ mod tests {
             let ijk = unnormalized_coord_ijk(&h2d);
 
             assert_eq!(exp_ijk, ijk);
+        }
+    }
+
+    #[test]
+    fn test_normalize_ijk_coords() {
+        for cols in test_tsv("ijk_normalize_cases.tsv") {
+            let raw_i: i64 = cols[0].parse().unwrap();
+            let raw_j: i64 = cols[1].parse().unwrap();
+            let raw_k: i64 = cols[2].parse().unwrap();
+            let norm_i: i64 = cols[3].parse().unwrap();
+            let norm_j: i64 = cols[4].parse().unwrap();
+            let norm_k: i64 = cols[5].parse().unwrap();
+
+            let raw_ijk = CoordIJK::new(raw_i, raw_j, raw_k);
+            let exp_ijk = CoordIJK::new(norm_i, norm_j, norm_k);
+
+            assert_eq!(exp_ijk, normalize_ijk_coord(raw_ijk));
         }
     }
 }
