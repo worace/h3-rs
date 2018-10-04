@@ -28,6 +28,24 @@ mod constants;
 //     int j;  ///< j component
 //     int k;  ///< k component
 // } CoordIJK;
+#[derive(Debug, PartialEq, PartialOrd)]
+pub struct CoordIJK {
+    i: i64,
+    j: i64,
+    k: i64
+}
+
+impl CoordIJK {
+    fn new(i: i64, j: i64, k: i64) -> CoordIJK {
+        CoordIJK{i: i, j: j, k: k}
+    }
+}
+
+#[derive(Debug)]
+pub struct FaceIJK {
+    face: usize,
+    coord: CoordIJK
+}
 
 #[derive(Debug)]
 pub struct GeoCoord {
@@ -186,6 +204,89 @@ fn geo_to_hex_2d(geo: &GeoCoord, res: usize) -> FaceCoord2d {
     let coords = Vec2d{x: gnomonic_r * face_angle.cos(),
                        y: gnomonic_r * face_angle.sin()};
     FaceCoord2d{face: face, coords: coords}
+}
+
+fn unnormalized_coord_ijk(h2d: &Vec2d) -> CoordIJK {
+    let mut coord = CoordIJK{i: 0, j: 0, k: 0};
+    let a1 = h2d.x.abs();
+    let a2 = h2d.y.abs();
+
+    let x2 = a2 / constants::M_SIN60;
+    let x1 = a1 + x2 / 2.0;
+
+    let m1 = x1 as i64;
+    let m2 = x2 as i64;
+
+    let r1 = x1 - (m1 as f64);
+    let r2 = x2 - (m2 as f64);
+
+    if r1 < 0.5 {
+        if r1 < 1.0 / 3.0 {
+            if r2 < (1.0 + r1) / 2.0 {
+                coord.i = m1;
+                coord.j = m2;
+            } else {
+                coord.i = m1;
+                coord.j = m2 + 1;
+            }
+        } else {
+            if r2 < (1.0 - r1) {
+                coord.j = m2;
+            } else {
+                coord.j = m2 + 1;
+            }
+
+            if (1.0 - r1) <= r2 && r2 < (2.0 * r1) {
+                coord.i = m1 + 1;
+            } else {
+                coord.i = m1;
+            }
+        }
+    } else {
+        if r1 < (2.0 / 3.0) {
+            if r2 < (1.0 - r1) {
+                coord.j = m2;
+            } else {
+                coord.j = m2 + 1;
+            }
+
+            if (2.0 * r1 - 1.0) < r2 && r2 < (1.0 - r1) {
+                coord.i = m1;
+            } else {
+                coord.i = m1 + 1;
+            }
+        } else {
+            if r2 < (r1 / 2.0) {
+                coord.i = m1 + 1;
+                coord.j = m2;
+            } else {
+                coord.i = m1 + 1;
+                coord.j = m2 + 1;
+            }
+        }
+    }
+
+    if h2d.x < 0.0 {
+        if coord.j % 2 == 0 {
+            let axis_i = coord.j / 2;
+            let diff = coord.i - axis_i;
+            coord.i = coord.i - 2 * diff;
+        } else {
+            let axis_i = (coord.j + 1) / 2;
+            let diff = coord.i - axis_i;
+            coord.i = coord.i - (2 * diff + 1);
+        }
+    }
+
+    if h2d.y < 0.0 {
+        coord.i = coord.i - (2 * coord.j + 1) / 2;
+        coord.j = coord.j * -1;
+    }
+    coord
+}
+
+fn hex_2d_to_coord_ijk(h2d: &Vec2d) -> CoordIJK {
+    unnormalized_coord_ijk(h2d)
 }
 
 #[cfg(test)]
@@ -438,6 +539,23 @@ mod tests {
                 }
             );
 
+        }
+    }
+
+    #[test]
+    fn test_hex2d_unnorm_ijk_conversion() {
+        for cols in test_tsv("unnorm_ijk_cases.tsv") {
+            let h2d_x: f64 = cols[0].parse().unwrap();
+            let h2d_y: f64 = cols[1].parse().unwrap();
+            let exp_i: i64 = cols[2].parse().unwrap();
+            let exp_j: i64 = cols[3].parse().unwrap();
+            let exp_k: i64 = cols[4].parse().unwrap();
+
+            let h2d = Vec2d::new(h2d_x, h2d_y);
+            let exp_ijk = CoordIJK::new(exp_i, exp_j, exp_k);
+            let ijk = unnormalized_coord_ijk(&h2d);
+
+            assert_eq!(exp_ijk, ijk);
         }
     }
 }
