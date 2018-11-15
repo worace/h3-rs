@@ -89,6 +89,9 @@ pub const H3_MODE_MASK_NEGATIVE: u64 = !H3_MODE_MASK;
 pub const H3_RES_OFFSET: u64 = 52;
 pub const H3_RES_MASK: u64 = 15 << H3_RES_OFFSET;
 pub const H3_RES_MASK_NEGATIVE: u64 = !H3_RES_MASK;
+pub const H3_BC_OFFSET: u64 = 45;
+pub const H3_BC_MASK: u64 = 127 << H3_BC_OFFSET;
+pub const H3_BC_MASK_NEGATIVE: u64 = !H3_BC_MASK;
 
 // static const double faceAxesAzRadsCII[NUM_ICOSA_FACES][3] = {
 //     {5.619958268523939882, 3.525563166130744542,

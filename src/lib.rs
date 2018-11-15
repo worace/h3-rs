@@ -352,8 +352,8 @@ fn geo_to_face_ijk(geo: &GeoCoord, res: usize) -> FaceIJK {
 type H3Index = u64;
 fn face_ijk_to_h3(fijk: &FaceIJK, res: usize) -> H3Index {
     // * [X] Set "hexagon mode" bit
-    // * [ ] Set resolution bits
-    // * [ ] Set Base Cell
+    // * [X] Set resolution bits
+    // * [X] Set Base Cell
     0
 }
 
@@ -363,6 +363,10 @@ fn set_h3_mode(index: H3Index, mode: u64) -> H3Index {
 
 fn set_h3_resolution(index: H3Index, res: u64) -> H3Index {
     (index & constants::H3_RES_MASK_NEGATIVE) | (res << constants::H3_RES_OFFSET)
+}
+
+fn set_h3_base_cell(index: H3Index, cell: u64) -> H3Index {
+    (index & constants::H3_BC_MASK_NEGATIVE) | (cell << constants::H3_BC_OFFSET)
 }
 
 #[cfg(test)]
@@ -701,5 +705,24 @@ mod tests {
         assert_eq!(630539132203958271, set_h3_resolution(576495936675512319, 12));
         assert_eq!(635042731831328767, set_h3_resolution(576495936675512319, 13));
         assert_eq!(639546331458699263, set_h3_resolution(576495936675512319, 14));
+    }
+
+    #[test]
+    #[ignore]
+    fn test_face_ijk_to_h3_invalid_index() {
+    }
+
+    #[test]
+    fn test_h3_set_base_cell() {
+        let start = 576495936675512319;
+        assert_eq!(576495936675512319, set_h3_base_cell(start, 0));
+        assert_eq!(576566305419689983, set_h3_base_cell(start, 2));
+        assert_eq!(576812596024311807, set_h3_base_cell(start, 9));
+        assert_eq!(577058886628933631, set_h3_base_cell(start, 16));
+        assert_eq!(577269992861466623, set_h3_base_cell(start, 22));
+    }
+
+    #[test]
+    fn test_face_ijk_to_base_cell() {
     }
 }
