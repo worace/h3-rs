@@ -724,5 +724,19 @@ mod tests {
 
     #[test]
     fn test_face_ijk_to_base_cell() {
+        // * [ ] Copy BaseCellOrient Mapping from baseCells.c:
+        // static const BaseCellOrient faceIjkBaseCells[NUM_ICOSA_FACES][3][3][3] = {
+        // * [ ] Port implementation:
+        // @brief Find base cell given FaceIJK.
+        //  *
+        //  * Given the face number and a resolution 0 ijk+ coordinate in that face's
+        //  * face-centered ijk coordinate system, return the base cell located at that
+        //  * coordinate.
+        //  *
+        //  * Valid ijk+ lookup coordinates are from (0, 0, 0) to (2, 2, 2).
+        // int _faceIjkToBaseCell(const FaceIJK* h) {
+        //     return faceIjkBaseCells[h->face][h->coord.i][h->coord.j][h->coord.k]
+        //         .baseCell;
+        // }
     }
 }
