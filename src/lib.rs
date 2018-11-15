@@ -339,6 +339,28 @@ fn geo_to_face_ijk(geo: &GeoCoord, res: usize) -> FaceIJK {
     FaceIJK{face: face_2d.face, coord: ijk}
 }
 
+// H3 Index
+// https://uber.github.io/h3/#/documentation/core-library/h3-index-representations
+// 64 bits
+// 0-3   - Mode setting -- 1000 for hexagon mode
+// 4-6   - Reserved -- reserved / empty
+// 7-10  - Resolution (4 bits, 0 - 15)
+// 11-17 - Base Cell (0 - 121)
+// 18-63 - Cell encoding - 45 bits
+//         3 bits per level from 1 - 15
+
+type H3Index = u64;
+fn face_ijk_to_h3(fijk: &FaceIJK, res: usize) -> H3Index {
+    // * [X] Set "hexagon mode" bit
+    // * [ ] Set resolution bits
+    // * [ ] Set Base Cell
+    0
+}
+
+fn set_h3_mode(index: H3Index, mode: u64) -> H3Index {
+    (index & constants::H3_MODE_MASK_NEGATIVE) | (mode << constants::H3_MODE_OFFSET)
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -660,5 +682,10 @@ mod tests {
 
             assert_eq!(face_ijk, geo_to_face_ijk(&geo, res));
         }
+    }
+
+    #[test]
+    fn test_h3_set_mode() {
+        assert_eq!(576495936675512319, set_h3_mode(constants::H3_INIT, constants::H3_HEXAGON_MODE));
     }
 }

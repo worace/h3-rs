@@ -79,6 +79,13 @@ pub const RES0_U_GNOMONIC: f64 = 0.38196601125010500003;
 pub const SQRT7: f64 = 2.6457513110645905905016157536392604257102;
 pub const M_SQRT3_2: f64 = 0.8660254037844386467637231707529361834714;
 pub const M_SIN60: f64 = M_SQRT3_2;
+// H3 index with mode 0, res 0, base cell 0, and 7 for all index digits.
+pub const H3_INIT: u64 = 35184372088831;
+pub const H3_HEXAGON_MODE: u64 = 1;
+pub const H3_MODE_OFFSET: u64 = 59;
+// 1's in the 4 mode bits, 0's everywhere else.
+pub const H3_MODE_MASK: u64 = 15 << H3_MODE_OFFSET;
+pub const H3_MODE_MASK_NEGATIVE: u64 = !H3_MODE_MASK;
 
 // static const double faceAxesAzRadsCII[NUM_ICOSA_FACES][3] = {
 //     {5.619958268523939882, 3.525563166130744542,
