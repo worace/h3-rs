@@ -14,7 +14,7 @@ mod constants;
 // [ ] geoToFaceIJK(coord, res) -> faceIJK coord
 // [X] geoToHex2d(coord, res) -> (face, vec2D)
 // [x] geoToVec3d(coord) -> 3dCoord
-// [ ] hex2dToCoordIJK(vec2D, )
+// [X] hex2dToCoordIJK(vec2D) -> CoordIJK
 // [X] pointSquareDist(vec3d, vec3d)
 // Most coord ops in radians
 
@@ -42,10 +42,16 @@ impl CoordIJK {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, PartialOrd)]
 pub struct FaceIJK {
     face: usize,
     coord: CoordIJK
+}
+impl FaceIJK {
+    fn new(face: usize, i: i64, j: i64, k: i64) -> FaceIJK {
+        FaceIJK{face: face,
+                coord: CoordIJK{i: i, j: j, k: k}}
+    }
 }
 
 #[derive(Debug)]
@@ -317,6 +323,20 @@ fn normalize_ijk_coord(raw: CoordIJK) -> CoordIJK {
 
 fn hex_2d_to_coord_ijk(h2d: &Vec2d) -> CoordIJK {
     normalize_ijk_coord(unnormalized_coord_ijk(h2d))
+}
+
+
+/**
+ * Encodes a coordinate on the sphere to the FaceIJK address of the containing
+ * cell at the specified resolution.
+ *
+ * geo: Lat/Lon coord in radians
+ * res: Desired H3 Resolution
+ */
+fn geo_to_face_ijk(geo: &GeoCoord, res: usize) -> FaceIJK {
+    let face_2d = geo_to_hex_2d(geo, res);
+    let ijk = hex_2d_to_coord_ijk(&face_2d.coords);
+    FaceIJK{face: face_2d.face, coord: ijk}
 }
 
 #[cfg(test)]
@@ -619,6 +639,26 @@ mod tests {
             let ijk = CoordIJK::new(coord_i, coord_j, coord_k);
 
             assert_eq!(ijk, hex_2d_to_coord_ijk(&h2d));
+        }
+    }
+
+    #[test]
+    fn test_geo_to_face_ijk() {
+        // TODO -- why is this one bad?
+        // 1.125543981167061113879412914685	-3.089471475623864371584659238579	4	3	92	6	0
+        for cols in test_tsv("geo_to_face_ijk_cases.tsv") {
+            let geo_lat: f64 = cols[0].parse().unwrap();
+            let geo_lon: f64 = cols[1].parse().unwrap();
+            let res: usize = cols[2].parse().unwrap();
+            let face: usize = cols[3].parse().unwrap();
+            let i: i64 = cols[4].parse().unwrap();
+            let j: i64 = cols[5].parse().unwrap();
+            let k: i64 = cols[6].parse().unwrap();
+
+            let geo = GeoCoord::new(geo_lat, geo_lon);
+            let face_ijk = FaceIJK::new(face, i, j, k);
+
+            assert_eq!(face_ijk, geo_to_face_ijk(&geo, res));
         }
     }
 }
