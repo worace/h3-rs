@@ -361,6 +361,10 @@ fn set_h3_mode(index: H3Index, mode: u64) -> H3Index {
     (index & constants::H3_MODE_MASK_NEGATIVE) | (mode << constants::H3_MODE_OFFSET)
 }
 
+fn set_h3_resolution(index: H3Index, res: u64) -> H3Index {
+    (index & constants::H3_RES_MASK_NEGATIVE) | (res << constants::H3_RES_OFFSET)
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -687,5 +691,15 @@ mod tests {
     #[test]
     fn test_h3_set_mode() {
         assert_eq!(576495936675512319, set_h3_mode(constants::H3_INIT, constants::H3_HEXAGON_MODE));
+    }
+
+    #[test]
+    fn test_h3_set_resolution() {
+        assert_eq!(612524733694476287, set_h3_resolution(576495936675512319, 8));
+        assert_eq!(617028333321846783, set_h3_resolution(576495936675512319, 9));
+        assert_eq!(621531932949217279, set_h3_resolution(576495936675512319, 10));
+        assert_eq!(630539132203958271, set_h3_resolution(576495936675512319, 12));
+        assert_eq!(635042731831328767, set_h3_resolution(576495936675512319, 13));
+        assert_eq!(639546331458699263, set_h3_resolution(576495936675512319, 14));
     }
 }
