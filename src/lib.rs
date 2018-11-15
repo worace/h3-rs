@@ -316,7 +316,7 @@ fn normalize_ijk_coord(raw: CoordIJK) -> CoordIJK {
 }
 
 fn hex_2d_to_coord_ijk(h2d: &Vec2d) -> CoordIJK {
-    unnormalized_coord_ijk(h2d)
+    normalize_ijk_coord(unnormalized_coord_ijk(h2d))
 }
 
 #[cfg(test)]
@@ -603,6 +603,22 @@ mod tests {
             let exp_ijk = CoordIJK::new(norm_i, norm_j, norm_k);
 
             assert_eq!(exp_ijk, normalize_ijk_coord(raw_ijk));
+        }
+    }
+
+    #[test]
+    fn test_hex2d_to_coord_ijk() {
+        for cols in test_tsv("hex2d_coordijk_cases.tsv") {
+            let hex_x: f64 = cols[0].parse().unwrap();
+            let hex_y: f64 = cols[1].parse().unwrap();
+            let coord_i: i64 = cols[2].parse().unwrap();
+            let coord_j: i64 = cols[3].parse().unwrap();
+            let coord_k: i64 = cols[4].parse().unwrap();
+
+            let h2d = Vec2d::new(hex_x, hex_y);
+            let ijk = CoordIJK::new(coord_i, coord_j, coord_k);
+
+            assert_eq!(ijk, hex_2d_to_coord_ijk(&h2d));
         }
     }
 }
