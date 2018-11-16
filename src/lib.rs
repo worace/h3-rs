@@ -353,23 +353,29 @@ fn geo_to_face_ijk(geo: &GeoCoord, res: usize) -> FaceIJK {
 //         3 bits per level from 1 - 15
 
 type H3Index = u64;
-fn face_ijk_to_h3(fijk: &FaceIJK, res: usize) -> H3Index {
-    // * [X] Set "hexagon mode" bit
-    // * [X] Set resolution bits
+fn face_ijk_to_h3(fijk: &FaceIJK, res: H3Resolution) -> H3Index {
+    let mut h3 = constants::H3_INIT;
+    h3 = set_h3_mode(h3, constants::H3_HEXAGON_MODE);
+    h3 = set_h3_resolution(h3, res);
     // * [X] Set Base Cell
-    0
+    if res == 0 {
+        let base_cell = face_ijk_to_base_cell(fijk);
+        h3 = set_h3_base_cell(h3, base_cell);
+        return h3;
+    }
+    h3
 }
 
 fn set_h3_mode(index: H3Index, mode: u64) -> H3Index {
     (index & constants::H3_MODE_MASK_NEGATIVE) | (mode << constants::H3_MODE_OFFSET)
 }
 
-fn set_h3_resolution(index: H3Index, res: u64) -> H3Index {
-    (index & constants::H3_RES_MASK_NEGATIVE) | (res << constants::H3_RES_OFFSET)
+fn set_h3_resolution(index: H3Index, res: H3Resolution) -> H3Index {
+    (index & constants::H3_RES_MASK_NEGATIVE) | ((res as u64) << constants::H3_RES_OFFSET)
 }
 
-fn set_h3_base_cell(index: H3Index, cell: u64) -> H3Index {
-    (index & constants::H3_BC_MASK_NEGATIVE) | (cell << constants::H3_BC_OFFSET)
+fn set_h3_base_cell(index: H3Index, cell: BaseCell) -> H3Index {
+    (index & constants::H3_BC_MASK_NEGATIVE) | ((cell as u64) << constants::H3_BC_OFFSET)
 }
 
 fn face_ijk_to_base_cell(fijk: &FaceIJK) -> BaseCell {
@@ -745,6 +751,20 @@ mod tests {
 
             let face_ijk = FaceIJK::new(face, i, j, k);
             assert_eq!(base_cell, face_ijk_to_base_cell(&face_ijk));
+        }
+    }
+
+    #[test]
+    fn test_face_ijk_to_h3_res_0() {
+        for cols in test_tsv("face_ijk_to_h3_res_0_cases.tsv") {
+            let face: usize = cols[0].parse().unwrap();
+            let i: i64 = cols[1].parse().unwrap();
+            let j: i64 = cols[2].parse().unwrap();
+            let k: i64 = cols[3].parse().unwrap();
+            let h3: H3Index = cols[4].parse().unwrap();
+
+            let face_ijk = FaceIJK::new(face, i, j, k);
+            assert_eq!(h3, face_ijk_to_h3(&face_ijk, 0));
         }
     }
 }

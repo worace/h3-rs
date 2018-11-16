@@ -1,3 +1,4 @@
+pub type H3Resolution = u8;
 pub type BaseCell = u8;
 
 #[derive(Debug, PartialEq, PartialOrd)]
