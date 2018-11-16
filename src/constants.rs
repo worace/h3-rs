@@ -1,3 +1,4 @@
+use types::CoordIJK;
 use Vec3d;
 use GeoCoord;
 
@@ -527,4 +528,15 @@ pub static FACE_IJK_BASE_CELLS: [[[[[u8; 2]; 3]; 3]; 3]; NUM_ICOSA_FACES] = [
             [[95, 1], [108, 1], [114, 0]]    // j 2
         ]
     ]
+];
+
+/** CoordIJK unit vectors corresponding to the 7 H3 digits. */
+pub static UNIT_VECS: [CoordIJK; 7] = [
+   CoordIJK{i: 0, j: 0, k: 0},  // direction 0
+   CoordIJK{i: 0, j: 0, k: 1},  // direction 1
+   CoordIJK{i: 0, j: 1, k: 0},  // direction 2
+   CoordIJK{i: 0, j: 1, k: 1},  // direction 3
+   CoordIJK{i: 1, j: 0, k: 0},  // direction 4
+   CoordIJK{i: 1, j: 0, k: 1},  // direction 5
+   CoordIJK{i: 1, j: 1, k: 0}   // direction 6
 ];

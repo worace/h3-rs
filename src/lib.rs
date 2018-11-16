@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 extern crate geo_types;
-use std::ops::Add;
 use std::fmt;
 use std::f64::consts::PI;
 use std::cmp::min;
@@ -23,33 +22,6 @@ use types::*;
 // Most coord ops in radians
 
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
-pub struct CoordIJK {
-    i: i64,
-    j: i64,
-    k: i64
-}
-
-impl CoordIJK {
-    fn new(i: i64, j: i64, k: i64) -> CoordIJK {
-        CoordIJK{i: i, j: j, k: k}
-    }
-
-    fn scale(self, mult: i64) -> CoordIJK {
-        Self::new(self.i * mult, self.j * mult, self.k * mult)
-    }
-}
-
-impl Add for CoordIJK {
-    type Output = Self;
-
-    fn add(self, other: Self) -> Self {
-        Self::new(self.i + other.i,
-                  self.j + other.j,
-                  self.k + other.k)
-    }
-}
-
-#[derive(Debug, PartialEq, PartialOrd)]
 pub struct FaceIJK {
     face: usize,
     coord: CoordIJK
@@ -185,15 +157,15 @@ fn face_theta(geo: &GeoCoord, face: usize) -> f64 {
  * @return 1 if the resolution is a Class III grid, and 0 if the resolution is
  *         a Class II grid.
  */
-fn is_class_iii_resolution(res: usize) -> bool {
+fn is_class_iii_resolution(res: H3Resolution) -> bool {
     res % 2 == 1
 }
 
-fn is_class_ii_resolution(res: usize) -> bool {
+fn is_class_ii_resolution(res: H3Resolution) -> bool {
     res % 2 == 0
 }
 
-fn geo_to_hex_2d(geo: &GeoCoord, res: usize) -> FaceCoord2d {
+fn geo_to_hex_2d(geo: &GeoCoord, res: H3Resolution) -> FaceCoord2d {
     let (face, dist) = nearest_face_to_geo(geo);
 
     let r = (1.0 - dist / 2.0).acos();
@@ -340,7 +312,7 @@ fn hex_2d_to_coord_ijk(h2d: &Vec2d) -> CoordIJK {
  * geo: Lat/Lon coord in radians
  * res: Desired H3 Resolution
  */
-fn geo_to_face_ijk(geo: &GeoCoord, res: usize) -> FaceIJK {
+fn geo_to_face_ijk(geo: &GeoCoord, res: H3Resolution) -> FaceIJK {
     let face_2d = geo_to_hex_2d(geo, res);
     let ijk = hex_2d_to_coord_ijk(&face_2d.coords);
     FaceIJK{face: face_2d.face, coord: ijk}
@@ -366,6 +338,43 @@ fn face_ijk_to_h3(fijk: &FaceIJK, res: H3Resolution) -> H3Index {
         let base_cell = face_ijk_to_base_cell(fijk);
         h3 = set_h3_base_cell(h3, base_cell);
         return h3;
+    }
+    h3
+}
+
+fn unit_ijk_to_direction(ijk: &CoordIJK) -> Direction {
+    let ijk_norm = normalize_ijk_coord(ijk.clone());
+    let mut dir = Direction::Invalid;
+    for (i, unit_ijk) in constants::UNIT_VECS.iter().enumerate() {
+        if ijk_norm == *unit_ijk {
+            dir = Direction::from_int(i as i64);
+            break;
+        }
+    }
+    return dir
+}
+
+fn set_h3_index_digit(h3: H3Index, res: H3Resolution, dir: Direction) -> H3Index {
+    h3
+}
+
+fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, h3: H3Index) -> H3Index {
+    let mut fijk_bc = fijk.clone();
+    let mut ijk = fijk.coord;
+    for r in (0..res).rev() {
+        println!("{}", r);
+        let last_ijk = ijk;
+        let last_center: CoordIJK;
+
+        if is_class_iii_resolution(r + 1) {
+            ijk = up_ap7(ijk);
+            last_center = down_ap7(ijk);
+        } else {
+            ijk = up_ap7_rot(ijk);
+            last_center = down_ap7_rot(ijk);
+        }
+
+        let diff = normalize_ijk_coord(last_ijk - last_center);
     }
     h3
 }
@@ -666,7 +675,7 @@ mod tests {
         for cols in test_tsv("hex_2d_non_zero_cases.tsv") {
             let lat_rads: f64 = cols[0].parse().unwrap();
             let lon_rads: f64 = cols[1].parse().unwrap();
-            let res: usize = cols[2].parse().unwrap();
+            let res: H3Resolution = cols[2].parse().unwrap();
             let face: usize = cols[3].parse().unwrap();
             let x: f64 = cols[4].parse().unwrap();
             let y: f64 = cols[5].parse().unwrap();
@@ -741,7 +750,7 @@ mod tests {
         for cols in test_tsv("geo_to_face_ijk_cases.tsv") {
             let geo_lat: f64 = cols[0].parse().unwrap();
             let geo_lon: f64 = cols[1].parse().unwrap();
-            let res: usize = cols[2].parse().unwrap();
+            let res: H3Resolution = cols[2].parse().unwrap();
             let face: usize = cols[3].parse().unwrap();
             let i: i64 = cols[4].parse().unwrap();
             let j: i64 = cols[5].parse().unwrap();
@@ -873,6 +882,38 @@ mod tests {
             let c0 = CoordIJK::new(i0, j0, k0);
             let c1 = CoordIJK::new(i1, j1, k1);
             assert_eq!(c1, down_ap7_rot(c0));
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn test_set_h3_index_digits() {
+        for cols in test_tsv("set_h3_index_digits_cases.tsv") {
+            let face: usize = cols[0].parse().unwrap();
+            let i: i64 = cols[1].parse().unwrap();
+            let j: i64 = cols[2].parse().unwrap();
+            let k: i64 = cols[3].parse().unwrap();
+            let res: H3Resolution = cols[4].parse().unwrap();
+            let h3_input: H3Index = cols[5].parse().unwrap();
+            let h3_output: H3Index = cols[6].parse().unwrap();
+
+            let fijk = FaceIJK::new(face, i, j, k);
+            assert_eq!(h3_output, set_h3_index_digits(&fijk, res, h3_input));
+        }
+    }
+
+    #[test]
+    fn test_unit_ijk_to_digit() {
+        for cols in test_tsv("unit_ijk_to_direction_cases.tsv") {
+            let i: i64 = cols[0].parse().unwrap();
+            let j: i64 = cols[1].parse().unwrap();
+            let k: i64 = cols[2].parse().unwrap();
+            let dir_i: i64 = cols[3].parse().unwrap();
+
+            let ijk = CoordIJK::new(i,j,k);
+            let dir = Direction::from_int(dir_i);
+
+            assert_eq!(dir, unit_ijk_to_direction(&ijk));
         }
     }
 }
