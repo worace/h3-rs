@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 extern crate geo_types;
+use std::ops::Add;
 use std::fmt;
 use std::f64::consts::PI;
 use std::cmp::min;
@@ -14,25 +15,14 @@ use types::*;
 
 // [ ] geoToH3(coord, res) -> h3 id
 // [X] geoToFace(coord) -> face (numeric id)
-// [ ] geoToFaceIJK(coord, res) -> faceIJK coord
+// [x] geoToFaceIJK(coord, res) -> faceIJK coord
 // [X] geoToHex2d(coord, res) -> (face, vec2D)
 // [x] geoToVec3d(coord) -> 3dCoord
 // [X] hex2dToCoordIJK(vec2D) -> CoordIJK
 // [X] pointSquareDist(vec3d, vec3d)
 // Most coord ops in radians
 
-// FaceIJK:
-// typedef struct {
-//     int face;        ///< face number
-//     CoordIJK coord;  ///< ijk coordinates on that face
-// } FaceIJK;
-
-// typedef struct {
-//     int i;  ///< i component
-//     int j;  ///< j component
-//     int k;  ///< k component
-// } CoordIJK;
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
 pub struct CoordIJK {
     i: i64,
     j: i64,
@@ -42,6 +32,20 @@ pub struct CoordIJK {
 impl CoordIJK {
     fn new(i: i64, j: i64, k: i64) -> CoordIJK {
         CoordIJK{i: i, j: j, k: k}
+    }
+
+    fn scale(self, mult: i64) -> CoordIJK {
+        Self::new(self.i * mult, self.j * mult, self.k * mult)
+    }
+}
+
+impl Add for CoordIJK {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Self::new(self.i + other.i,
+                  self.j + other.j,
+                  self.k + other.k)
     }
 }
 
@@ -385,6 +389,46 @@ fn face_ijk_to_base_cell(fijk: &FaceIJK) -> BaseCell {
         [fijk.coord.j as usize]
         [fijk.coord.k as usize]
         [0]
+}
+
+fn up_ap7(coord: CoordIJK) -> CoordIJK {
+    let mut out = coord.clone();
+    let i = coord.i - coord.k;
+    let j = coord.j - coord.k;
+
+    out.i = (((3 * i - j) as f64) / 7.0f64).round() as i64;
+    out.j = (((i + 2 * j) as f64) / 7.0f64).round() as i64;
+    out.k = 0;
+    normalize_ijk_coord(out)
+}
+
+fn up_ap7_rot(coord: CoordIJK) -> CoordIJK {
+    let mut out = coord.clone();
+    let i = coord.i - coord.k;
+    let j = coord.j - coord.k;
+
+    out.i = (((2 * i + j) as f64) / 7.0f64).round() as i64;
+    out.j = (((3 * j - i) as f64) / 7.0f64).round() as i64;
+    out.k = 0;
+    normalize_ijk_coord(out)
+}
+
+fn down_ap7(coord: CoordIJK) -> CoordIJK {
+    let ivec = CoordIJK::new(3,0,1).scale(coord.i);
+    let jvec = CoordIJK::new(1,3,0).scale(coord.j);
+    let kvec = CoordIJK::new(0,1,3).scale(coord.k);
+
+    let out = ivec + jvec + kvec;
+    normalize_ijk_coord(out)
+}
+
+fn down_ap7_rot(coord: CoordIJK) -> CoordIJK {
+    let ivec = CoordIJK::new(3,1,0).scale(coord.i);
+    let jvec = CoordIJK::new(0,3,1).scale(coord.j);
+    let kvec = CoordIJK::new(1,0,3).scale(coord.k);
+
+    let out = ivec + jvec + kvec;
+    normalize_ijk_coord(out)
 }
 
 #[cfg(test)]
@@ -765,6 +809,70 @@ mod tests {
 
             let face_ijk = FaceIJK::new(face, i, j, k);
             assert_eq!(h3, face_ijk_to_h3(&face_ijk, 0));
+        }
+    }
+
+    #[test]
+    fn test_up_ap7() {
+        for cols in test_tsv("up_ap7_cases.tsv") {
+            let i0: i64 = cols[0].parse().unwrap();
+            let j0: i64 = cols[1].parse().unwrap();
+            let k0: i64 = cols[2].parse().unwrap();
+            let i1: i64 = cols[3].parse().unwrap();
+            let j1: i64 = cols[4].parse().unwrap();
+            let k1: i64 = cols[5].parse().unwrap();
+
+            let c0 = CoordIJK::new(i0, j0, k0);
+            let c1 = CoordIJK::new(i1, j1, k1);
+            assert_eq!(c1, up_ap7(c0));
+        }
+    }
+
+    #[test]
+    fn test_down_ap7() {
+        for cols in test_tsv("down_ap7_cases.tsv") {
+            let i0: i64 = cols[0].parse().unwrap();
+            let j0: i64 = cols[1].parse().unwrap();
+            let k0: i64 = cols[2].parse().unwrap();
+            let i1: i64 = cols[3].parse().unwrap();
+            let j1: i64 = cols[4].parse().unwrap();
+            let k1: i64 = cols[5].parse().unwrap();
+
+            let c0 = CoordIJK::new(i0, j0, k0);
+            let c1 = CoordIJK::new(i1, j1, k1);
+            assert_eq!(c1, down_ap7(c0));
+        }
+    }
+
+    #[test]
+    fn test_up_ap7_rot() {
+        for cols in test_tsv("up_ap7_rot_cases.tsv") {
+            let i0: i64 = cols[0].parse().unwrap();
+            let j0: i64 = cols[1].parse().unwrap();
+            let k0: i64 = cols[2].parse().unwrap();
+            let i1: i64 = cols[3].parse().unwrap();
+            let j1: i64 = cols[4].parse().unwrap();
+            let k1: i64 = cols[5].parse().unwrap();
+
+            let c0 = CoordIJK::new(i0, j0, k0);
+            let c1 = CoordIJK::new(i1, j1, k1);
+            assert_eq!(c1, up_ap7_rot(c0));
+        }
+    }
+
+    #[test]
+    fn test_down_ap7_rot() {
+        for cols in test_tsv("down_ap7_rot_cases.tsv") {
+            let i0: i64 = cols[0].parse().unwrap();
+            let j0: i64 = cols[1].parse().unwrap();
+            let k0: i64 = cols[2].parse().unwrap();
+            let i1: i64 = cols[3].parse().unwrap();
+            let j1: i64 = cols[4].parse().unwrap();
+            let k1: i64 = cols[5].parse().unwrap();
+
+            let c0 = CoordIJK::new(i0, j0, k0);
+            let c1 = CoordIJK::new(i1, j1, k1);
+            assert_eq!(c1, down_ap7_rot(c0));
         }
     }
 }
