@@ -8,6 +8,9 @@ use std::cmp::min;
 
 const TWO_PI: f64 = PI * 2.0;
 mod constants;
+mod types;
+
+use types::*;
 
 // [ ] geoToH3(coord, res) -> h3 id
 // [X] geoToFace(coord) -> face (numeric id)
@@ -369,6 +372,15 @@ fn set_h3_base_cell(index: H3Index, cell: u64) -> H3Index {
     (index & constants::H3_BC_MASK_NEGATIVE) | (cell << constants::H3_BC_OFFSET)
 }
 
+fn face_ijk_to_base_cell(fijk: &FaceIJK) -> BaseCell {
+    constants::FACE_IJK_BASE_CELLS
+        [fijk.face]
+        [fijk.coord.i as usize]
+        [fijk.coord.j as usize]
+        [fijk.coord.k as usize]
+        [0]
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -724,19 +736,15 @@ mod tests {
 
     #[test]
     fn test_face_ijk_to_base_cell() {
-        // * [ ] Copy BaseCellOrient Mapping from baseCells.c:
-        // static const BaseCellOrient faceIjkBaseCells[NUM_ICOSA_FACES][3][3][3] = {
-        // * [ ] Port implementation:
-        // @brief Find base cell given FaceIJK.
-        //  *
-        //  * Given the face number and a resolution 0 ijk+ coordinate in that face's
-        //  * face-centered ijk coordinate system, return the base cell located at that
-        //  * coordinate.
-        //  *
-        //  * Valid ijk+ lookup coordinates are from (0, 0, 0) to (2, 2, 2).
-        // int _faceIjkToBaseCell(const FaceIJK* h) {
-        //     return faceIjkBaseCells[h->face][h->coord.i][h->coord.j][h->coord.k]
-        //         .baseCell;
-        // }
+        for cols in test_tsv("face_ijk_to_base_cell_cases.tsv") {
+            let face: usize = cols[0].parse().unwrap();
+            let i: i64 = cols[1].parse().unwrap();
+            let j: i64 = cols[2].parse().unwrap();
+            let k: i64 = cols[3].parse().unwrap();
+            let base_cell: u8 = cols[4].parse().unwrap();
+
+            let face_ijk = FaceIJK::new(face, i, j, k);
+            assert_eq!(base_cell, face_ijk_to_base_cell(&face_ijk));
+        }
     }
 }
