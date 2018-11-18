@@ -38,6 +38,19 @@ impl Direction {
             _ => Direction::Invalid,
         }
     }
+
+    pub fn to_u64(self) -> u64 {
+        match self {
+            Direction::Center => 0,
+            Direction::KAxes => 1,
+            Direction::JAxes => 2,
+            Direction::JKAxes => 3,
+            Direction::IAxes => 4,
+            Direction::IKAxes => 5,
+            Direction::IJAxes => 6,
+            Direction::Invalid => 7
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]

@@ -355,7 +355,10 @@ fn unit_ijk_to_direction(ijk: &CoordIJK) -> Direction {
 }
 
 fn set_h3_index_digit(h3: H3Index, res: H3Resolution, dir: Direction) -> H3Index {
-    h3
+    let res_offset = (constants::MAX_H3_RES - res as u64) * constants::H3_PER_DIGIT_OFFSET;
+    let digit_mask = dir.to_u64() << res_offset;
+    let fill = !(constants::H3_DIGIT_MASK << res_offset);
+    (h3 & fill) | digit_mask as u64
 }
 
 fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, h3: H3Index) -> H3Index {
@@ -914,6 +917,19 @@ mod tests {
             let dir = Direction::from_int(dir_i);
 
             assert_eq!(dir, unit_ijk_to_direction(&ijk));
+        }
+    }
+
+    #[test]
+    fn test_set_h3_index_digit() {
+        for cols in test_tsv("set_h3_index_digit_cases.tsv") {
+            let h3_input: H3Index = cols[0].parse().unwrap();
+            let res: H3Resolution = cols[1].parse().unwrap();
+            let dir_i: i64 = cols[2].parse().unwrap();
+            let dir = Direction::from_int(dir_i);
+            let h3_output: H3Index = cols[3].parse().unwrap();
+
+            assert_eq!(h3_output, set_h3_index_digit(h3_input, res, dir));
         }
     }
 }

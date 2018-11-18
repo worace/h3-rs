@@ -1,4 +1,5 @@
 use types::CoordIJK;
+use types::H3Resolution;
 use Vec3d;
 use GeoCoord;
 
@@ -540,3 +541,8 @@ pub static UNIT_VECS: [CoordIJK; 7] = [
    CoordIJK{i: 1, j: 0, k: 1},  // direction 5
    CoordIJK{i: 1, j: 1, k: 0}   // direction 6
 ];
+
+pub const H3_DIGIT_MASK: u64 = 7;
+pub const H3_DIGIT_MASK_NEGATIVE: u64 = !H3_DIGIT_MASK;
+pub const MAX_H3_RES: u64 = 15;
+pub const H3_PER_DIGIT_OFFSET: u64 = 3;
