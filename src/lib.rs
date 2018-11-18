@@ -361,11 +361,11 @@ fn set_h3_index_digit(h3: H3Index, res: H3Resolution, dir: Direction) -> H3Index
     (h3 & fill) | digit_mask as u64
 }
 
-fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, h3: H3Index) -> H3Index {
+fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, _h3: H3Index) -> H3Index {
     let mut fijk_bc = fijk.clone();
     let mut ijk = fijk.coord;
+    let mut h3 = _h3;
     for r in (0..res).rev() {
-        println!("{}", r);
         let last_ijk = ijk;
         let last_center: CoordIJK;
 
@@ -378,6 +378,8 @@ fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, h3: H3Index) -> H3Inde
         }
 
         let diff = normalize_ijk_coord(last_ijk - last_center);
+        let dir = unit_ijk_to_direction(&diff);
+        h3 = set_h3_index_digit(h3, r + 1, dir);
     }
     h3
 }
@@ -889,7 +891,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_set_h3_index_digits() {
         for cols in test_tsv("set_h3_index_digits_cases.tsv") {
             let face: usize = cols[0].parse().unwrap();
@@ -897,8 +898,8 @@ mod tests {
             let j: i64 = cols[2].parse().unwrap();
             let k: i64 = cols[3].parse().unwrap();
             let res: H3Resolution = cols[4].parse().unwrap();
-            let h3_input: H3Index = cols[5].parse().unwrap();
-            let h3_output: H3Index = cols[6].parse().unwrap();
+            let h3_output: H3Index = cols[5].parse().unwrap();
+            let h3_input: H3Index = cols[6].parse().unwrap();
 
             let fijk = FaceIJK::new(face, i, j, k);
             assert_eq!(h3_output, set_h3_index_digits(&fijk, res, h3_input));
