@@ -31,6 +31,9 @@ impl FaceIJK {
         FaceIJK{face: face,
                 coord: CoordIJK{i: i, j: j, k: k}}
     }
+    fn from_coord(face: usize, coord: CoordIJK) -> FaceIJK {
+        FaceIJK{face: face, coord: coord}
+    }
 }
 
 #[derive(Debug)]
@@ -339,6 +342,12 @@ fn face_ijk_to_h3(fijk: &FaceIJK, res: H3Resolution) -> H3Index {
         h3 = set_h3_base_cell(h3, base_cell);
         return h3;
     }
+
+    let (h3_with_index, base_ijk) = base_ijk_with_index_digits(fijk, res, h3);
+    let base_fijk = FaceIJK::from_coord(fijk.face, base_ijk);
+    // TODO: check invalid index here
+    let base_cell = face_ijk_to_base_cell(&base_fijk);
+    h3 = set_h3_base_cell(h3, base_cell);
     h3
 }
 
@@ -361,10 +370,9 @@ fn set_h3_index_digit(h3: H3Index, res: H3Resolution, dir: Direction) -> H3Index
     (h3 & fill) | digit_mask as u64
 }
 
-fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, _h3: H3Index) -> H3Index {
+fn base_ijk_with_index_digits(fijk: &FaceIJK, res: H3Resolution, mut h3: H3Index) -> (H3Index, CoordIJK) {
     let mut fijk_bc = fijk.clone();
     let mut ijk = fijk.coord;
-    let mut h3 = _h3;
     for r in (0..res).rev() {
         let last_ijk = ijk;
         let last_center: CoordIJK;
@@ -381,7 +389,7 @@ fn set_h3_index_digits(fijk: &FaceIJK, res: H3Resolution, _h3: H3Index) -> H3Ind
         let dir = unit_ijk_to_direction(&diff);
         h3 = set_h3_index_digit(h3, r + 1, dir);
     }
-    h3
+    (h3, ijk)
 }
 
 fn set_h3_mode(index: H3Index, mode: u64) -> H3Index {
@@ -434,6 +442,15 @@ fn down_ap7(coord: CoordIJK) -> CoordIJK {
 
     let out = ivec + jvec + kvec;
     normalize_ijk_coord(out)
+}
+
+fn face_ijk_to_base_cell_ccw_rot_60(fijk: &FaceIJK) -> BaseCell {
+    constants::FACE_IJK_BASE_CELLS
+        [fijk.face]
+        [fijk.coord.i as usize]
+        [fijk.coord.j as usize]
+        [fijk.coord.k as usize]
+        [1]
 }
 
 fn down_ap7_rot(coord: CoordIJK) -> CoordIJK {
@@ -891,22 +908,6 @@ mod tests {
     }
 
     #[test]
-    fn test_set_h3_index_digits() {
-        for cols in test_tsv("set_h3_index_digits_cases.tsv") {
-            let face: usize = cols[0].parse().unwrap();
-            let i: i64 = cols[1].parse().unwrap();
-            let j: i64 = cols[2].parse().unwrap();
-            let k: i64 = cols[3].parse().unwrap();
-            let res: H3Resolution = cols[4].parse().unwrap();
-            let h3_output: H3Index = cols[5].parse().unwrap();
-            let h3_input: H3Index = cols[6].parse().unwrap();
-
-            let fijk = FaceIJK::new(face, i, j, k);
-            assert_eq!(h3_output, set_h3_index_digits(&fijk, res, h3_input));
-        }
-    }
-
-    #[test]
     fn test_unit_ijk_to_digit() {
         for cols in test_tsv("unit_ijk_to_direction_cases.tsv") {
             let i: i64 = cols[0].parse().unwrap();
@@ -933,4 +934,52 @@ mod tests {
             assert_eq!(h3_output, set_h3_index_digit(h3_input, res, dir));
         }
     }
+
+    #[test]
+    fn test_base_ijk_with_index_digits() {
+        for cols in test_tsv("base_ijk_with_h3_digits_cases.tsv") {
+            let h3_input: H3Index = cols[0].parse().unwrap();
+            let face: usize = cols[1].parse().unwrap();
+            let start_i: i64 = cols[2].parse().unwrap();
+            let start_j: i64 = cols[3].parse().unwrap();
+            let start_k: i64 = cols[4].parse().unwrap();
+            let res: H3Resolution = cols[5].parse().unwrap();
+            let h3_output: H3Index = cols[6].parse().unwrap();
+            let end_i: i64 = cols[7].parse().unwrap();
+            let end_j: i64 = cols[8].parse().unwrap();
+            let end_k: i64 = cols[9].parse().unwrap();
+
+            let fijk = FaceIJK::new(face, start_i, start_j, start_k);
+            let (h3, base_ijk) = base_ijk_with_index_digits(&fijk, res, h3_input);
+            let exp_ijk = CoordIJK::new(end_i, end_j, end_k);
+            assert_eq!(h3_output, h3);
+            assert_eq!(exp_ijk, base_ijk);
+        }
+    }
+
+    #[test]
+    fn test_face_ijk_to_base_cell_ccw_rot_60() {
+        let cases = vec![(0, FaceIJK::new(16, 0, 0, 0)),
+                         (0, FaceIJK::new(17, 1, 0, 1)),
+                         (0, FaceIJK::new(19, 1, 0, 0)),
+                         (0, FaceIJK::new(0 , 1, 1, 0)),
+                         (0, FaceIJK::new(10, 0, 0, 1)),
+                         (0, FaceIJK::new(6 , 0, 1, 0)),
+                         (3, FaceIJK::new(6 , 0, 0, 2)),
+                         (0, FaceIJK::new(10, 0, 0, 0)),
+                         (0, FaceIJK::new(3 , 0, 1, 1))];
+
+        for (res, fijk) in cases.iter() {
+            assert_eq!(*res, face_ijk_to_base_cell_ccw_rot_60(&fijk));
+        }
+    }
+
+    // UTILS
+    // * [X] _faceIjkToBaseCellCCWrot60
+    // * [ ] _isBaseCellPentagon
+    // * [ ] _h3LeadingNonZeroDigit
+    // * [ ] _baseCellIsCwOffset
+    // * [ ] _h3Rotate60cw
+    // * [ ] _h3Rotate60ccw
+    // * [ ] _h3RotatePent60ccw
 }
