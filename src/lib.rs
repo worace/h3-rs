@@ -351,7 +351,7 @@ fn unit_ijk_to_direction(ijk: &CoordIJK) -> Direction {
 fn set_h3_index_digit(h3: H3Index, res: H3Resolution, dir: Direction) -> H3Index {
     let res_offset = (constants::MAX_H3_RES - res as u64) * constants::H3_PER_DIGIT_OFFSET;
     let digit_mask = dir.to_u64() << res_offset;
-    let fill = !(constants::H3_DIGIT_MASK << res_offset);
+    let fill = !((constants::H3_DIGIT_MASK) << res_offset);
     (h3 & fill) | digit_mask as u64
 }
 
@@ -445,6 +445,10 @@ fn down_ap7_rot(coord: CoordIJK) -> CoordIJK {
 
     let out = ivec + jvec + kvec;
     normalize_ijk_coord(out)
+}
+
+fn base_cell_is_pentagon(cell: BaseCell) -> bool {
+    constants::BASE_CELL_DATA[cell as usize].is_pentagon
 }
 
 #[cfg(test)]
@@ -961,11 +965,21 @@ mod tests {
 
     #[test]
     fn test_base_cell_is_pentagon() {
+        let cases = vec![(0u8, false), (1, false), (2, false), (3, false), (4, true), (14, true), (15, false),
+                         (21, false), (22, false), (23, false), (24, true), (28, false), (29, false), (35, false),
+                         (36, false), (37, false), (38, true), (39, false), (42, false), (43, false), (44, false),
+                         (49, true), (50, false), (56, false), (57, false), (58, true), (63, true), (64, false),
+                         (65, false), (70, false), (71, false), (72, true), (82, false), (83, true), (84, false),
+                         (85, false), (96, false), (97, true), (107, true), (108, false), (109, false), (110, false),
+                         (116, false), (117, true), (118, false), (119, false), (120, false), (121, false)];
+        for (cell, res) in cases.iter() {
+            assert_eq!(*res, base_cell_is_pentagon(*cell));
+        }
     }
 
     // UTILS
     // * [X] _faceIjkToBaseCellCCWrot60
-    // * [ ] _isBaseCellPentagon
+    // * [X] _isBaseCellPentagon
     // * [ ] _h3LeadingNonZeroDigit
     // * [ ] _baseCellIsCwOffset
     // * [ ] _h3Rotate60cw
