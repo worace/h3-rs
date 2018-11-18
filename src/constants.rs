@@ -1,5 +1,7 @@
 use types::CoordIJK;
 use types::H3Resolution;
+use types::BaseCellData;
+use types::FaceIJK;
 use Vec3d;
 use GeoCoord;
 
@@ -546,3 +548,138 @@ pub const H3_DIGIT_MASK: u64 = 7;
 pub const H3_DIGIT_MASK_NEGATIVE: u64 = !H3_DIGIT_MASK;
 pub const MAX_H3_RES: u64 = 15;
 pub const H3_PER_DIGIT_OFFSET: u64 = 3;
+
+
+pub const NUM_BASE_CELLS: usize = 122;
+
+/** Resolution 0 base cell data table.
+For each base cell, gives:
+ * The "home" face and ijk+ coordinates on that face
+ * Whether or not the base cell is a pentagon.
+ * Additionally, if the base cell is a pentagon,
+   the two cw offset rotation adjacent faces are given if available.
+ */
+pub static BASE_CELL_DATA: [BaseCellData; NUM_BASE_CELLS] = [
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 0
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 1
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 2
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 3
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: None},            // base cell 4
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 5
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 6
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 7
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 8
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 9
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 10
+   BaseCellData{home_fijk: FaceIJK{face: 1,  coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 11
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 12
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 13
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((2, 6))},    // base cell 14
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 15
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 16
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 17
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 18
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 19
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 20
+   BaseCellData{home_fijk: FaceIJK{face: 2,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 21
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 22
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 23
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((1, 5))},    // base cell 24
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 25
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 26
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 27
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 28
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 29
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 30
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 31
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 32
+   BaseCellData{home_fijk: FaceIJK{face: 0,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 33
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 34
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 35
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 36
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 37
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((3, 7))},    // base cell 38
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 39
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 40
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 41
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 42
+   BaseCellData{home_fijk: FaceIJK{face: 3,  coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 43
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 44
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 45
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 46
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 47
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 48
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((0, 9))},    // base cell 49
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 50
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 51
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 52
+   BaseCellData{home_fijk: FaceIJK{face: 4,  coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 53
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 54
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 55
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 56
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 57
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((4, 8))},    // base cell 58
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 59
+   BaseCellData{home_fijk: FaceIJK{face: 11, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 60
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 61
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 62
+   BaseCellData{home_fijk: FaceIJK{face: 6,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((11, 15))},  // base cell 63
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 64
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 65
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 66
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 67
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 68
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 69
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 70
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 71
+   BaseCellData{home_fijk: FaceIJK{face: 7,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((12, 16))},  // base cell 72
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 73
+   BaseCellData{home_fijk: FaceIJK{face: 10, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 74
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 75
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 76
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 77
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 78
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 79
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 80
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 81
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 1, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 82
+   BaseCellData{home_fijk: FaceIJK{face: 5,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((10, 19))},  // base cell 83
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 84
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 85
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 86
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 87
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 88
+   BaseCellData{home_fijk: FaceIJK{face: 12, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 89
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 90
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 91
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 92
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 93
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 94
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 95
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 96
+   BaseCellData{home_fijk: FaceIJK{face: 8,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((13, 17))},  // base cell 97
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 98
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 99
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 100
+   BaseCellData{home_fijk: FaceIJK{face: 14, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 101
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 102
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 103
+   BaseCellData{home_fijk: FaceIJK{face: 13, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 104
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 105
+   BaseCellData{home_fijk: FaceIJK{face: 16, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 106
+   BaseCellData{home_fijk: FaceIJK{face: 9,  coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: Some((14, 18))},  // base cell 107
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 108
+   BaseCellData{home_fijk: FaceIJK{face: 15, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 109
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 0, j: 1, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 110
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 111
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 0, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 112
+   BaseCellData{home_fijk: FaceIJK{face: 17, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 113
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 114
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 0, j: 1, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 115
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 116
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 2, j: 0, k: 0}}, is_pentagon: true , pentagon_cw_offset_faces: None},  // base cell 117
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 118
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 0, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 119
+   BaseCellData{home_fijk: FaceIJK{face: 19, coord: CoordIJK{i: 1, j: 0, k: 1}}, is_pentagon: false, pentagon_cw_offset_faces: None},            // base cell 120
+   BaseCellData{home_fijk: FaceIJK{face: 18, coord: CoordIJK{i: 1, j: 0, k: 0}}, is_pentagon: false, pentagon_cw_offset_faces: None}            // base cell 121
+];

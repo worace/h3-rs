@@ -21,21 +21,6 @@ use types::*;
 // [X] pointSquareDist(vec3d, vec3d)
 // Most coord ops in radians
 
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
-pub struct FaceIJK {
-    face: usize,
-    coord: CoordIJK
-}
-impl FaceIJK {
-    fn new(face: usize, i: i64, j: i64, k: i64) -> FaceIJK {
-        FaceIJK{face: face,
-                coord: CoordIJK{i: i, j: j, k: k}}
-    }
-    fn from_coord(face: usize, coord: CoordIJK) -> FaceIJK {
-        FaceIJK{face: face, coord: coord}
-    }
-}
-
 #[derive(Debug)]
 pub struct GeoCoord {
     lat: f64,
@@ -972,6 +957,10 @@ mod tests {
         for (res, fijk) in cases.iter() {
             assert_eq!(*res, face_ijk_to_base_cell_ccw_rot_60(&fijk));
         }
+    }
+
+    #[test]
+    fn test_base_cell_is_pentagon() {
     }
 
     // UTILS

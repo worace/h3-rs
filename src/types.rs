@@ -4,6 +4,28 @@ use std::ops::Sub;
 pub type H3Resolution = u8;
 pub type BaseCell = u8;
 
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+pub struct FaceIJK {
+    pub face: usize,
+    pub coord: CoordIJK
+}
+
+impl FaceIJK {
+    pub fn new(face: usize, i: i64, j: i64, k: i64) -> FaceIJK {
+        FaceIJK{face: face,
+                coord: CoordIJK{i: i, j: j, k: k}}
+    }
+    pub fn from_coord(face: usize, coord: CoordIJK) -> FaceIJK {
+        FaceIJK{face: face, coord: coord}
+    }
+}
+
+pub struct BaseCellData {
+    pub home_fijk: FaceIJK,
+    pub is_pentagon: bool,
+    pub pentagon_cw_offset_faces: Option<(BaseCell, BaseCell)>
+}
+
 #[derive(Debug, PartialEq, PartialOrd)]
 // Base cell at a given ijk
 // and required rotations into its system
