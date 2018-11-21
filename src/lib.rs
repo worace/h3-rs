@@ -451,6 +451,25 @@ fn base_cell_is_pentagon(cell: BaseCell) -> bool {
     constants::BASE_CELL_DATA[cell as usize].is_pentagon
 }
 
+fn h3_get_resolution(h3: H3Index) -> H3Resolution {
+    (h3 & constants::H3_RES_MASK >> constants::H3_RES_OFFSET) as H3Resolution
+}
+
+fn h3_get_index_digit(h3: H3Index, res: H3Resolution) -> Direction {
+    let offset = (constants::MAX_H3_RES - res as u64) * constants::H3_PER_DIGIT_OFFSET;
+    Direction::from_int(((h3 >> offset) & constants::H3_DIGIT_MASK) as i64)
+}
+
+fn leading_nonzero_digit(h3: H3Index) -> Direction {
+    for res in 1..h3_get_resolution(h3) {
+        let dir = h3_get_index_digit(h3, res);
+        if dir != Direction::Center {
+            return dir;
+        }
+    }
+    Direction::Center
+}
+
 #[cfg(test)]
 mod tests {
     use *;
@@ -977,9 +996,26 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_leading_non_zero_digit() {
+        for cols in test_tsv("leading_nonzero_digit_cases.tsv") {
+            let h3: H3Index = cols[0].parse().unwrap();
+            let dir_i: i64 = cols[1].parse().unwrap();
+            let exp_dir = Direction::from_int(dir_i);
+            println!("{} - {:?}", h3, exp_dir);
+            assert_eq!(exp_dir, leading_nonzero_digit(h3));
+        }
+    }
+
+    #[test]
+    fn test_h3_get_resolution() {
+    }
+
     // UTILS
     // * [X] _faceIjkToBaseCellCCWrot60
     // * [X] _isBaseCellPentagon
+    // * [ ] H3_GET_RESOLUTION
+    // * [ ] H3_GET_INDEX_DIGIT
     // * [ ] _h3LeadingNonZeroDigit
     // * [ ] _baseCellIsCwOffset
     // * [ ] _h3Rotate60cw
