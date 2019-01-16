@@ -2,6 +2,12 @@
 
 This is a very **WIP** effort to port Uber's [H3](https://github.com/uber/h3) spatial grid library from C to Rust.
 
+### Methodology
+
+* Use the existing C library to generate test cases for every method (both public and private) being ported
+* Follow the original algorithms as closely as possible
+* Introduce small Rust-ifications where possible to make the library feel more idiomatic
+
 ### Initial Goal: Lat/Lon -> H3 ID Conversion
 
 * [X] geoToFace(coord) -> face (numeric id)
